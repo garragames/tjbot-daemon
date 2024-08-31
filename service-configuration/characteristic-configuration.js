@@ -13,28 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import winston from 'winston';
+import bleno from 'bleno';
 
-const util = require('util');
-const winston = require('winston');
+const { Characteristic, Descriptor } = bleno;
 
-const bleno = require('bleno');
-const BlenoCharacteristic = bleno.Characteristic;
-const BlenoDescriptor = bleno.Descriptor;
-
-function ConfigurationCharacteristic(name) {
-    ConfigurationCharacteristic.super_.call(this, {
-        uuid: '799d5f0d-0001-0001-a6a2-da053e2a640a',
-        properties: ['read'],
-        value: Buffer.from(JSON.stringify({name:name})),
-        descriptors: [
-            new BlenoDescriptor({
-                uuid: '0101',
-                value: 'TJBot Configuration'
-            })
-        ]
-    });
+class ConfigurationCharacteristic extends Characteristic {
+    constructor(name) {
+        super({
+            uuid: '799d5f0d-0001-0001-a6a2-da053e2a640a',
+            properties: ['read'],
+            value: Buffer.from(JSON.stringify({ name: name })),
+            descriptors: [
+                new Descriptor({
+                    uuid: '0101',
+                    value: 'TJBot Configuration'
+                })
+            ]
+        });
+    }
 }
 
-util.inherits(ConfigurationCharacteristic, BlenoCharacteristic);
-
-module.exports = ConfigurationCharacteristic;
+export default ConfigurationCharacteristic;

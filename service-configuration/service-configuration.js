@@ -13,27 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import bleno from 'bleno';
+import HardwareCharacteristic from './characteristic-hardware.js';
+import ConfigurationCharacteristic from './characteristic-configuration.js';
+import CapabilityCharacteristic from './characteristic-capability.js';
 
-const util = require('util');
+const { PrimaryService } = bleno;
 
-const bleno = require('bleno');
-const BlenoPrimaryService = bleno.PrimaryService;
-
-const HardwareCharacteristic = require('./characteristic-hardware');
-const ConfigurationCharacteristic = require('./characteristic-configuration');
-const CapabilityCharacteristic = require('./characteristic-capability');
-
-function ConfigurationService(tjbot, name) {
-    ConfigurationService.super_.call(this, {
-        uuid: '799d5f0d-0001-0000-a6a2-da053e2a640a',
-        characteristics: [
-            new HardwareCharacteristic(tjbot),
-            new ConfigurationCharacteristic(name),
-            new CapabilityCharacteristic(tjbot)
-        ]
-    });
+class ConfigurationService extends PrimaryService {
+    constructor(tjbot, name) {
+        super({
+            uuid: '799d5f0d-0001-0000-a6a2-da053e2a640a',
+            characteristics: [
+                new HardwareCharacteristic(tjbot),
+                new ConfigurationCharacteristic(name),
+                new CapabilityCharacteristic(tjbot)
+            ]
+        });
+    }
 }
 
-util.inherits(ConfigurationService, BlenoPrimaryService);
-
-module.exports = ConfigurationService;
+export default ConfigurationService;

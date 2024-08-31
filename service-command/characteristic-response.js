@@ -13,57 +13,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import winston from 'winston';
+import bleno from 'bleno';
+import utilities from '../utilities.js';
+//const utilities = require('../utilities.js');
 
-const util = require('util');
-const winston = require('winston');
 
-const bleno = require('bleno');
-const BlenoCharacteristic = bleno.Characteristic;
-const BlenoDescriptor = bleno.Descriptor;
+const { Characteristic, Descriptor } = bleno;
 
-const utilities = require('../utilities');
+class ResponseCharacteristic extends Characteristic {
+    constructor(tjbot) {
+        super({
+            uuid: '799d5f0d-0002-0003-a6a2-da053e2a640a',
+            properties: ['notify'],
+            descriptors: [
+                new Descriptor({
+                    uuid: '0203',
+                    value: 'TJBot Response channel for receiving data from a request'
+                })
+            ]
+        });
 
-function ResponseCharacteristic(tjbot) {
-    ResponseCharacteristic.super_.call(this, {
-        uuid: '799d5f0d-0002-0003-a6a2-da053e2a640a',
-        properties: ['notify'],
-        descriptors: [
-            new BlenoDescriptor({
-                uuid: '0203',
-                value: 'TJBot Response channel for receiving data from a request'
-            })
-        ]
-    });
+        this.tjbot = tjbot;
+        this.updateValueCallback = undefined;
+        this.maxValueSize = 0;
+    }
 
-    this.tjbot = tjbot;
-    this.updateValueCallback = undefined;
-    this.maxValueSize = 0;
-}
+    onSubscribe(maxValueSize, updateValueCallback) {
+        winston.verbose("Device subscribed to ResponseCharacteristic");
+        this.updateValueCallback = updateValueCallback;
+        this.maxValueSize = maxValueSize;
+    }
 
-util.inherits(ResponseCharacteristic, BlenoCharacteristic);
+    onUnsubscribe() {
+        winston.verbose("Device unsubscribed from ResponseCharacteristic");
+        this.updateValueCallback = undefined;
+        this.maxValueSize = 0;
+    }
 
-ResponseCharacteristic.prototype.onSubscribe = function(maxValueSize, updateValueCallback) {
-    winston.verbose("Device subscribed to ResponseCharacteristic");
-    this.updateValueCallback = updateValueCallback;
-    this.maxValueSize = maxValueSize;
-}
+    writeResponseObject(obj) {
+        const objJson = JSON.stringify(obj);
+        const data = Buffer.from(objJson);
 
-ResponseCharacteristic.prototype.onUnsubscribe = function() {
-    winston.verbose("Device unsubscribed from ResponseCharacteristic");
-    this.updateValueCallback = undefined;
-    this.maxValueSize = 0;
-}
-
-ResponseCharacteristic.prototype.writeResponseObject = function(obj) {
-    var objJson = JSON.stringify(obj);
-    var data = Buffer.from(objJson);
-
-    winston.verbose("Writing response object to ResponseCharacteristic: ", obj);
-    if (this.updateValueCallback != undefined) {
-        utilities.chunkedWrite(this.updateValueCallback, data, this.maxValueSize);
-    } else {
-        winston.error("Unable to write response object, device did not subscribe to ResponseCharacteristic");
+        winston.verbose("Writing response object to ResponseCharacteristic: ", obj);
+        if (this.updateValueCallback !== undefined) {
+            utilities.chunkedWrite(this.updateValueCallback, data, this.maxValueSize);
+        } else {
+            winston.error("Unable to write response object, device did not subscribe to ResponseCharacteristic");
+        }
     }
 }
 
-module.exports = ResponseCharacteristic;
+export default ResponseCharacteristic;

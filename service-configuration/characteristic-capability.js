@@ -13,28 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import winston from 'winston';
+import bleno from 'bleno';
 
-const util = require('util');
-const winston = require('winston');
+const { Characteristic, Descriptor } = bleno;
 
-const bleno = require('bleno');
-const BlenoCharacteristic = bleno.Characteristic;
-const BlenoDescriptor = bleno.Descriptor;
-
-function CapabilityCharacteristic(tjbot) {
-    CapabilityCharacteristic.super_.call(this, {
-        uuid: '799d5f0d-0001-0003-a6a2-da053e2a640a',
-        properties: ['read'],
-        value: Buffer.from(JSON.stringify(tjbot.capabilities)),
-        descriptors: [
-            new BlenoDescriptor({
-                uuid: '0103',
-                value: 'TJBot Capabilities'
-            })
-        ]
-    });
+class CapabilityCharacteristic extends Characteristic {
+    constructor(tjbot) {
+        console.log('TJBot: ', JSON.stringify(tjbot, null, 3));
+        super({
+            uuid: '799d5f0d-0001-0003-a6a2-da053e2a640a',
+            properties: ['read'],
+            value: Buffer.from(JSON.stringify(tjbot.configuration.capabilities)),
+            descriptors: [
+                new Descriptor({
+                    uuid: '0103',
+                    value: 'TJBot Capabilities'
+                })
+            ]
+        });
+    }
 }
 
-util.inherits(CapabilityCharacteristic, BlenoCharacteristic);
-
-module.exports = CapabilityCharacteristic;
+export default CapabilityCharacteristic;

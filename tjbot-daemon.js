@@ -14,45 +14,49 @@
  * limitations under the License.
  */
 
-const os = require('os');
-const bleno = require('bleno');
-const winston = require('winston');
+import os from 'os';
+import bleno from 'bleno';
+import winston from 'winston';
 
-const TJBot = require('tjbot');
-const config = require('./config');
+import TJBot from 'tjbot';
+import config from './config.js';
 
-const ConfigurationService = require('./service-configuration/service-configuration');
-const CommandService = require('./service-command/service-command');
+import ConfigurationService from './service-configuration/service-configuration.js';
+import CommandService from './service-command/service-command.js';
 
 const TJBOT_SERVICE_UUID = "799d5f0d-0000-0000-a6a2-da053e2a640a";
 
-// obtain our hardware configuration from config.js
-var hardware = config.hardware;
+// obtener la configuración de hardware desde config.js
+const hardware = config.hardware;
 
-// obtain our tjbot config from config.js
-var tjConfig = config.tjConfig;
+// obtener la configuración de TJBot desde config.js
+const tjConfig = config.tjConfig;
 
-// obtain our credentials from config.js
-var credentials = config.credentials;
+// obtener las credenciales desde config.js
+const credentials = config.credentials;
 
-// instantiate our TJBot!
-var tj = new TJBot(hardware, tjConfig, credentials);
+// instanciar TJBot
+const tj = new TJBot(config, credentials);
 
-// instantiate bleno
-var name = os.hostname();
-name = name.substring(0,26); // BLE name can only be 26 bytes
+// configurar el hardware
+tj.initialize(hardware);
 
-// verbose logging
+
+// instanciar bleno
+let name = os.hostname();
+name = name.substring(0, 26); // El nombre BLE solo puede tener 26 bytes
+
+// registro detallado (verbose)
 winston.level = 'silly';
 
-// Once bleno starts, begin advertising our BLE address
-bleno.on('stateChange', function(state) {
+// Una vez que bleno comienza, comenzar a anunciar nuestra dirección BLE
+bleno.on('stateChange', (state) => {
     winston.verbose('BLE state change: ' + state);
     if (state === 'poweredOn') {
         winston.verbose('Advertising on BLE as: ' + name);
-        bleno.startAdvertising(name, [TJBOT_SERVICE_UUID], function(error) {
+        bleno.startAdvertising(name, [TJBOT_SERVICE_UUID], (error) => {
             if (error) {
-                winston.error("Error in advertisting: ", error);
+                winston.error("Error in advertising: ", error);
             }
         });
     } else {
@@ -60,35 +64,37 @@ bleno.on('stateChange', function(state) {
     }
 });
 
-// Notify the console that we've accepted a connection
-bleno.on('accept', function(clientAddress) {
+// Notificar en la consola que hemos aceptado una conexión
+bleno.on('accept', (clientAddress) => {
     winston.verbose("Accepted connection from address: " + clientAddress);
 
-    // play a sound signifying a client connected
+    // reproducir un sonido que signifique que un cliente se ha conectado
     try {
         tj.play('./sounds/connect.wav');
     } catch (err) {
+        winston.error("Error playing connect sound: ", err);
     }
 });
 
-// Notify the console that we have disconnected from a client
-bleno.on('disconnect', function(clientAddress) {
+// Notificar en la consola que nos hemos desconectado de un cliente
+bleno.on('disconnect', (clientAddress) => {
     winston.verbose("Disconnected from address: " + clientAddress);
 
-    // stop listening in case tjbot is listening
-    // (and bypass the capability assert() in case this
-    // tjbot doens't have a mic)
-    tj._stopListening();
+    // detener la escucha en caso de que TJBot esté escuchando
+    // (y pasar por alto la comprobación de capacidad en caso de que
+    // este TJBot no tenga micrófono)
+    //tj._stopListening();
 
-    // play a sound signifying a client disconnected
+    // reproducir un sonido que signifique que un cliente se ha desconectado
     try {
         tj.play('./sounds/disconnect.wav');
     } catch (err) {
+        winston.error("Error playing disconnect sound: ", err);
     }
 });
 
-// When we begin advertising, create a new service and characteristic
-bleno.on('advertisingStart', function(error) {
+// Cuando comenzamos a anunciar, crear un nuevo servicio y característica
+bleno.on('advertisingStart', (error) => {
     if (error) {
         winston.error("Advertising start error:", error);
     } else {

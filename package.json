@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "tjbot-daemon",
   "description": "Background daemon that listens on Bluetooth for TJBot requests",
   "version": "1.1.0",
@@ -16,7 +17,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "bleno": "^0.4.2",
+    "@abandonware/bleno": "^0.6.1",
+    "bleno": "npm:@abandonware/bleno@^0.6.1",
     "tjbot": "latest",
     "winston": "^2.3.1",
     "mkdirp": "latest",
